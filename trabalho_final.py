@@ -3,10 +3,11 @@ import numpy as np
 import pandas as pd
 import random
 import time
+from pyeasyga import pyeasyga
 
 #Dados
 dados = pd.read_csv('dados.csv', encoding = "ISO-8859-1", index_col='Nó')
-dados_observados = pd.read_csv('dados_observados_def.csv')
+dados_observados = pd.read_csv('dados_observados_def.csv', index_col='Vazão (l/s)')
 dados_trechos = pd.read_csv('dados_trechos_def.csv', index_col='Trecho')
 Nivel_Reservatorio = 240
 g = 9.8
@@ -113,13 +114,48 @@ def hardy_cross(E,Q):
         
     return (P_no5,P_no12,P_no16)
 
-def erro(Q,E):
+#def erro(Q,E):
     """Recebe a vazão que sai do reservatório e a rugosidade do material e retorna
     o erro entre as pressões medidas e observadas nos pontos P5, P12, P16"""
-    P5,P12,P16 = hardy_cross(0.0015,(35.62/1000))
-    errop5 = (P5 - dados_observados.loc[[0],'pressão n5 (m)'].get(0))**2
-    errop12 = (P12 - dados_observados.loc[[0],'pressão n12 (m)'].get(0))**2
-    errop16 = (P16 - dados_observados.loc[[0],'pressão n16 (m)'].get(0))**2
-    erro = errop5 + errop12 + errop16
+ #   P5,P12,P16 = hardy_cross(0.0015,(35.62/1000))
+  #  errop5 = (P5 - dados_observados.loc[[0],'pressão n5 (m)'].get(0))**2
+   # errop12 = (P12 - dados_observados.loc[[0],'pressão n12 (m)'].get(0))**2
+    #errop16 = (P16 - dados_observados.loc[[0],'pressão n16 (m)'].get(0))**2
+    #erro = errop5 + errop12 + errop16
     return erro
+
+individuos = np.random.uniform(0.0015, 0.1, 10)
+data = []
+c = 0
+for n in individuos:
+    for q in vazoes_reservatorio:
+        c = c + 1
+        i = {}
+        i['vazao'] = q
+        i['rugosidade'] = n
+        i['P5'],i['P12'],i['P16'] = hardy_cross(n,q)
+        data.append(i)
+    
+ga = pyeasyga.GeneticAlgorithm(data)
+
+def fitness(individual, data):
+    for (selected, item) in zip(individual, data):
+        #solucao = {}
+        erro = (item['P5'] - (dados_observados.loc[[str(item['vazao'])],'pressao5'].get(0))**2/1000) + (item['P12'] - (dados_observados.loc[[str(item['vazao'])],'pressao12'].get(0))**2/1000) + (item['P16'] - (dados_observados.loc[[str(item['vazao'])],'pressao16'].get(0))**2/1000)
+        if erro > 0.001:
+            erro = 0
+    return erro
+
+ga.fitness_function = fitness               # set the GA's fitness function
+ga.run()                                    # run the GA
+valor, vetor = ga.best_individual()            # print the GA's best solution
+
+solucoes_binario = np.asarray(vetor)
+total_solucoes = np.multiply(np.arange(120),solucoes)
+solucoes_validas = total_solucoes[total_solucoes != 0]
+solucoes_finais = pd.DataFrame()
+for i in solucoes_validas:
+    solucoes_finais.append(i)
+
+
 
