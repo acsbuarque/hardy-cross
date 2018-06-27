@@ -15,9 +15,6 @@ vazoes_reservatorio = np.array([35.62,28.11,29.24,64.63,79.51,90.07,79.73,74.24,
 
 #Inserindo vazões aleatórias em cada anel
 #vazoes_observadas = dados_observados['Vazão (l/s)'].as_matrix()*1000
-dados_trechos['vazoes']=np.array([35.62,10.74,9.65,5.57,-0.91,2.57,4.2,5.25,7,2.67,0.35,-4.23,-6.66,-7.35,-0.2,-1,-9.63,-11.63,-13.59,-15])/1000
-dados_trechos['coeficientes'] = (dados_trechos['vazoes'].values)/abs((dados_trechos['vazoes'].values))
-
 #Separando os dados de cada anel
 anel1, anel2, anel3 = dados_trechos.iloc[[1,2,15,14,16,17,18,19]], dados_trechos.iloc[[1,2,4,5,6,7,8]], dados_trechos.iloc[[3,9,10,11,12,13,14,15]] 
 Q1  = dados_trechos.iloc
@@ -46,6 +43,7 @@ def hardy_cross(E,Q):
     PERIOD_OF_TIME = 60
 
     while np.all(somaH>np.full(3,0.01)):
+        dados_trechos['coeficientes'] = (dados_trechos['vazoes'].values)/abs((dados_trechos['vazoes'].values))
         
         #Calculando a perda de carga no Anel 1
         anel1['Reynolds']=Reynolds(anel1['vazoes'],anel1['Diametro (mm)'])
@@ -114,21 +112,13 @@ def hardy_cross(E,Q):
         
     return (P_no5,P_no12,P_no16)
 
-#def erro(Q,E):
-    """Recebe a vazão que sai do reservatório e a rugosidade do material e retorna
-    o erro entre as pressões medidas e observadas nos pontos P5, P12, P16"""
- #   P5,P12,P16 = hardy_cross(0.0015,(35.62/1000))
-  #  errop5 = (P5 - dados_observados.loc[[0],'pressão n5 (m)'].get(0))**2
-   # errop12 = (P12 - dados_observados.loc[[0],'pressão n12 (m)'].get(0))**2
-    #errop16 = (P16 - dados_observados.loc[[0],'pressão n16 (m)'].get(0))**2
-    #erro = errop5 + errop12 + errop16
-    return erro
 
 individuos = np.random.uniform(0.0015, 0.1, 10)
 data = []
 c = 0
 for n in individuos:
     for q in vazoes_reservatorio:
+        dados_trechos['vazoes']=np.array([35.62,10.74,9.65,5.57,-0.91,2.57,4.2,5.25,7,2.67,0.35,-4.23,-6.66,-7.35,-0.2,-1,-9.63,-11.63,-13.59,-15])/1000
         c = c + 1
         i = {}
         i['vazao'] = q
