@@ -16,8 +16,6 @@ vazoes_reservatorio = np.array([35.62,28.11,29.24,64.63,79.51,90.07,79.73,74.24,
 #Inserindo vazões aleatórias em cada anel
 #vazoes_observadas = dados_observados['Vazão (l/s)'].as_matrix()*1000
 #Separando os dados de cada anel
-anel1, anel2, anel3 = dados_trechos.iloc[[1,2,15,14,16,17,18,19]], dados_trechos.iloc[[1,2,4,5,6,7,8]], dados_trechos.iloc[[3,9,10,11,12,13,14,15]] 
-Q1  = dados_trechos.iloc
 #E = 0.0015
 
 def Reynolds(Q,D):
@@ -38,12 +36,18 @@ def hardy_cross(E,Q):
     FR1 = fator_de_atrito(E,dados_trechos.loc[['R-1'],'Diametro (mm)'],ReyR1) #Fator de atrito do trecho R-1
     H1 = perda_de_carga(FR1,dados_trechos.loc[['R-1'],'Comprimento'],Q,dados_trechos.loc[['R-1'],'Diametro (mm)'])
     perda1 = pd.Series(H1, index=['R-1'])
+    dados_trechos['vazoes']=np.array([35.62,10.74,9.65,5.57,-0.91,2.57,4.2,5.25,7,2.67,0.35,-4.23,-6.66,-7.35,-0.2,-1,-9.63,-11.63,-13.59,-15])/1000
+    dados_trechos['coeficientes'] = (dados_trechos['vazoes'].values)/abs((dados_trechos['vazoes'].values))
+    anel1, anel2, anel3 = dados_trechos.iloc[[1,2,15,14,16,17,18,19]], dados_trechos.iloc[[1,2,4,5,6,7,8]], dados_trechos.iloc[[3,9,10,11,12,13,14,15]] 
+    Q1  = dados_trechos.iloc
+    
+
     
     start = time.time()
     PERIOD_OF_TIME = 60
 
     while np.all(somaH>np.full(3,0.01)):
-        dados_trechos['coeficientes'] = (dados_trechos['vazoes'].values)/abs((dados_trechos['vazoes'].values))
+        
         
         #Calculando a perda de carga no Anel 1
         anel1['Reynolds']=Reynolds(anel1['vazoes'],anel1['Diametro (mm)'])
@@ -118,7 +122,6 @@ data = []
 c = 0
 for n in individuos:
     for q in vazoes_reservatorio:
-        dados_trechos['vazoes']=np.array([35.62,10.74,9.65,5.57,-0.91,2.57,4.2,5.25,7,2.67,0.35,-4.23,-6.66,-7.35,-0.2,-1,-9.63,-11.63,-13.59,-15])/1000
         c = c + 1
         i = {}
         i['vazao'] = q
@@ -141,7 +144,7 @@ ga.run()                                    # run the GA
 valor, vetor = ga.best_individual()            # print the GA's best solution
 
 solucoes_binario = np.asarray(vetor)
-total_solucoes = np.multiply(np.arange(120),solucoes)
+total_solucoes = np.multiply(np.arange(120),solucoes_binario)
 solucoes_validas = total_solucoes[total_solucoes != 0]
 solucoes_finais = pd.DataFrame()
 for i in solucoes_validas:
